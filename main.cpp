@@ -1,7 +1,7 @@
 #include <iostream>
 #include <array>
 #include <unordered_set>
-#include "consts.cpp"
+#include "moves.cpp"
 using namespace std;
 // Rubik cube solver with bidirectional search
 
@@ -12,7 +12,7 @@ void bidirectional_bfs() {
 }
 
 int main() {
-    unordered_set<array<int, NUMFACES>> seen;
+    // unordered_set<array<int, NUMFACES>> seen;
     // keeps track of goal state
     // TODO: before checking if solved, align to the orientation of the fixed goal state
     array<int, NUMFACES> GOALSTATE = {}; 

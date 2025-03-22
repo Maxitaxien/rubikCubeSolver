@@ -2,11 +2,9 @@
 #include <algorithm>
 #include "consts.cpp"
 using namespace std;
-// move functions
-// https://jperm.net/3x3/moves
-// basic: up, down, right, left, front, back (clockwise)
-// and corresponding prime versions for counterclockwise
-// total = 18 = branching factor of search
+
+
+// helper functions for moves
 array<int, 3> getRow(array<int, NUMFACES>& cubeState, int start) {
     return {cubeState[start], cubeState[start + 1], cubeState[start + 2]};
 }
@@ -52,8 +50,28 @@ void cclockwiseRot(array<int, NUMFACES>& cubeState, int start) {
 }
 
 // used for F and B moves
-void rotateFace(array<int, NUMFACES>& cubeState, int f1, int f2, int f3, int f4) {
-    // TODO: Implement generalisable F-logic here
+void rotateFace(array<int, NUMFACES>& cubeState, int f1, int f2, int f3, int f4, bool reverseCols) {
+    array<int, 3> row1 = getRow(cubeState, f1); 
+    array<int, 3> col1 = getCol(cubeState, f2); 
+    array<int, 3> row2 = getRow(cubeState, f3); 
+    array<int, 3> col2 = getCol(cubeState, f4); 
+
+    // reversing either columns or rows depending on operation
+    if (reverseCols) {
+        reverse(col1.begin(), col1.end());
+        reverse(col2.begin(), col2.end());
+    }
+
+    else {
+        reverse(row1.begin(), row1.end());
+        reverse(row2.begin(), row2.end());
+    }
+
+
+    assignRow(cubeState, col1, f1);
+    assignCol(cubeState, row1, f2);
+    assignRow(cubeState, col2, f3);
+    assignCol(cubeState, row2, f4);
 }
 
 void moveRow(array<int, NUMFACES>& cubeState, int f1, int f2, int f3, int f4, int offset) {
@@ -64,14 +82,21 @@ void moveRow(array<int, NUMFACES>& cubeState, int f1, int f2, int f3, int f4, in
     assignRow(cubeState, temp, f4 + offset);
 }
 
-void moveCol(array<int, NUMFACES>& cubeState, int f1, int f2, int f3, int f4, int offset) {
-    array<int, 3> temp = getCol(cubeState, f1 + offset);
-    assignCol(cubeState, getCol(cubeState, f2 + offset), f1 + offset);
-    assignCol(cubeState, getCol(cubeState, f3 + offset), f2 + offset);
-    assignCol(cubeState, getCol(cubeState, f4 + offset), f3 + offset);
-    assignCol(cubeState, temp, f4 + offset);
+// can't have constant offset for column movement - 
+// for instance, r moves the third columns of front, down and top, but first column of back
+void moveCol(array<int, NUMFACES>& cubeState, int f1, int f2, int f3, int f4) {
+    array<int, 3> temp = getCol(cubeState, f1);
+    assignCol(cubeState, getCol(cubeState, f2), f1);
+    assignCol(cubeState, getCol(cubeState, f3), f2);
+    assignCol(cubeState, getCol(cubeState, f4), f3);
+    assignCol(cubeState, temp, f4);
 }
 
+// move functions
+// https://jperm.net/3x3/moves
+// basic: up, down, right, left, front, back (clockwise)
+// and corresponding prime versions for counterclockwise
+// total = 18 = branching factor of search
 void U(array<int, NUMFACES>& cubeState) {
     moveRow(cubeState, FRONT, RIGHT, BACK, LEFT, 0);
     clockwiseRot(cubeState, TOP);
@@ -83,62 +108,59 @@ void D(array<int, NUMFACES>& cubeState) {
 }
 
 void R(array<int, NUMFACES>& cubeState) {
-    moveCol(cubeState, FRONT, DOWN, BACK, TOP, 3);
+    moveCol(cubeState, FRONT + 3, DOWN + 3, BACK, TOP + 3);
     clockwiseRot(cubeState, RIGHT);
 }
 
 void L(array<int, NUMFACES>& cubeState) {
-    moveCol(cubeState, FRONT, TOP, BACK, DOWN, 0);
+    moveCol(cubeState, FRONT, TOP, BACK + 3, DOWN);
     clockwiseRot(cubeState, LEFT);
 }
 
-// when keeping our orientation constant, F and B would be a mix of
-// moving columns and rows, so it's easier to hardcode them.
+// when keeping our orientation constant,
+// F and B operations apply to both some rows and columns
 void F(array<int, NUMFACES>& cubeState) {
-    array<int, 3> topRow = getRow(cubeState, TOP + 6);
-    array<int, 3> rightCol = getCol(cubeState, RIGHT);
-    array<int, 3> downRow = getRow(cubeState, DOWN);
-    array<int, 3> leftCol = getCol(cubeState, LEFT + 3);
-
-    // When swapping the columns around to a row,
-    // the last element in the column array should be the first in the new row position
-    // therefore, we reverse:
-    reverse(rightCol.begin(), rightCol.end());
-    reverse(leftCol.begin(), leftCol.end());
-
-    assignRow(cubeState, leftCol, TOP + 6);
-    assignCol(cubeState, topRow, RIGHT);
-    assignRow(cubeState, rightCol, DOWN);
-    assignCol(cubeState, downRow, LEFT + 3);
-    
+    rotateFace(cubeState, TOP + 6, LEFT + 2, DOWN, RIGHT, true);
     clockwiseRot(cubeState, FRONT);
 }
 
-// TODO: implement other moves. should be copy-paste
 void B(array<int, NUMFACES>& cubeState) {
-    moveRow(cubeState, TOP, RIGHT, DOWN, LEFT, 0);
+    rotateFace(cubeState, TOP, RIGHT + 2, DOWN + 6, LEFT, false);
+    cclockwiseRot(cubeState, BACK);
 }
 
 // p = prime, counterclockwise rotation
 void U_p(array<int, NUMFACES>& cubeState) {
+    moveRow(cubeState, FRONT, LEFT, BACK, RIGHT, 0);
+    cclockwiseRot(cubeState, TOP);
 }
 
 void D_p(array<int, NUMFACES>& cubeState) {
+    moveRow(cubeState, FRONT, LEFT, BACK, RIGHT, 6);
+    cclockwiseRot(cubeState, DOWN);
 }
 
 void R_p(array<int, NUMFACES>& cubeState) {
+    moveCol(cubeState, FRONT + 3, TOP + 3, BACK, DOWN + 3);
+    cclockwiseRot(cubeState, RIGHT);
 }
 
 void L_p(array<int, NUMFACES>& cubeState) {
+    moveCol(cubeState, FRONT, DOWN, BACK + 3, TOP);
+    cclockwiseRot(cubeState, LEFT);
 }
 
 void F_p(array<int, NUMFACES>& cubeState) {
+    rotateFace(cubeState, TOP + 6, RIGHT, DOWN, LEFT + 2, false);
+    cclockwiseRot(cubeState, FRONT);
 }
 
 void B_p(array<int, NUMFACES>& cubeState) {
+    rotateFace(cubeState, TOP, LEFT, DOWN + 6, RIGHT + 2, true);
+    clockwiseRot(cubeState, BACK);
 }
 
-// slice moves: move middle layer clockwise (and counterclockwise for prime versions)
+// TODO: slice moves: move middle layer clockwise (and counterclockwise for prime versions)
 void M(array<int, NUMFACES>& cubeState) {
 }
 
@@ -151,9 +173,9 @@ void S(array<int, NUMFACES>& cubeState) {
 void M_p(array<int, NUMFACES>& cubeState) {
 }
 
-void F_p(array<int, NUMFACES>& cubeState) {
+void E_p(array<int, NUMFACES>& cubeState) {
 }
 
-void B_p(array<int, NUMFACES>& cubeState) {
+void S_p(array<int, NUMFACES>& cubeState) {
 }
     
