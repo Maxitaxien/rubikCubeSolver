@@ -1,3 +1,4 @@
+#include <vector>
 // Colours:
 // white, yellow, red, green, blue, orange
 const int w = 0; 
