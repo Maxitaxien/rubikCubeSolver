@@ -113,7 +113,7 @@ std::array<int, NUMFACES> D(const std::array<int, NUMFACES>& cubeState) {
 
 std::array<int, NUMFACES> R(const std::array<int, NUMFACES>& cubeState) {
     std::array<int, NUMFACES> newCube = cubeState;
-    moveCol(newCube, FRONT + 3, DOWN + 3, BACK, TOP + 3);
+    moveCol(newCube, FRONT + 3, DOWN + 3, BACK + 6, TOP + 3);
     clockwiseRot(newCube, RIGHT);
     return newCube;
 }
@@ -158,7 +158,7 @@ std::array<int, NUMFACES> D_p(const std::array<int, NUMFACES>& cubeState) {
 
 std::array<int, NUMFACES> R_p(const std::array<int, NUMFACES>& cubeState) {
     std::array<int, NUMFACES> newCube = cubeState;
-    moveCol(newCube, FRONT + 3, TOP + 3, BACK, DOWN + 3);
+    moveCol(newCube, FRONT + 3, TOP + 3, BACK + 6, DOWN + 3);
     cclockwiseRot(newCube, RIGHT);
     return newCube;
 }
